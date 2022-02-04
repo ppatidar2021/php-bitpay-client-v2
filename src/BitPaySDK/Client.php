@@ -17,6 +17,7 @@ use BitPaySDK\Exceptions\InvoiceCreationException;
 use BitPaySDK\Exceptions\InvoiceUpdateException;
 use BitPaySDK\Exceptions\InvoiceQueryException;
 use BitPaySDK\Exceptions\InvoiceCancellationException;
+use BitPaySDK\Exceptions\InvoiceNotificationException;
 use BitPaySDK\Exceptions\LedgerQueryException;
 use BitPaySDK\Exceptions\PayoutRecipientCreationException;
 use BitPaySDK\Exceptions\PayoutRecipientCancellationException;
@@ -389,6 +390,39 @@ class Client
         }
 
         return $invoice;
+    }
+
+    /**
+     * Request a BitPay Invoice Webhook.
+     *
+     * @param $invoiceId     string A BitPay invoice ID.
+     * @return $result      bool True if the webhook was successfully requested, false otherwise.
+     * @throws InvoiceNotificationException InvoiceNotificationException class
+     * @throws BitPayException BitPayException class
+     */
+    public function requestInvoiceNotification(string $invoiceId): bool
+    {
+        try {
+            $params = [];
+            $invoice = $this->getInvoice($invoiceId);
+                    
+        } catch (BitPayException $e) {
+            throw new InvoiceNotificationException("failed to serialize invoice object : ".$e->getMessage(), null, null, $e->getApiCode());
+        } catch (Exception $e) {
+            throw new InvoiceNotificationException("failed to serialize invoice object : ".$e->getMessage());
+        }
+
+        $params["token"] = $invoice->getToken();
+        
+        try {
+            $responseJson = $this->_RESTcli->post("invoices/".$invoiceId."/notifications", $params);
+            $result = strtolower(json_decode($responseJson)) == "success";
+        } catch (Exception $e) {
+            throw new InvoiceNotificationException(
+                "failed to deserialize BitPay server response (Invoice) : ".$e->getMessage());
+        }
+
+        return $result;
     }
 
     /**
@@ -1099,7 +1133,7 @@ class Client
      * @return array     A list of BitPayRecipient objects.
      * @throws BitPayException BitPayException class
      */
-    public function getPayoutRecipients(string $status = null, int $limit = null, int $offset = null): array 
+    public function getPayoutRecipients(string $status = null, int $limit = 100, int $offset = 0): array 
     {
         try {
             $params = [];
@@ -1194,7 +1228,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutRecipientCancellationException(
@@ -1225,7 +1259,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutRecipientNotificationException(
@@ -1393,7 +1427,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutCancellationException(
@@ -1424,7 +1458,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutNotificationException(
@@ -1589,7 +1623,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutBatchCancellationException(
@@ -1620,7 +1654,7 @@ class Client
         }
 
         try {
-            $result = json_decode($responseJson) == [];
+            $result = strtolower(json_decode($responseJson)->status) == "success";
 
         } catch (Exception $e) {
             throw new PayoutBatchNotificationException(

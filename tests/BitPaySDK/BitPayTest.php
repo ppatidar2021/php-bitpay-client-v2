@@ -185,6 +185,22 @@ class BitPayTest extends TestCase
         $this->assertNotNull($retreivedCancelledInvoice);
     }
 
+    public function testShouldRequestInvoiceWebhook()
+    {
+        $basicInvoice = null;
+        
+        try {
+            $basicInvoice = $this->client->createInvoice(new Invoice(0.1, Currency::BTC));
+            $notificationStatus = $this->client->requestInvoiceNotification($basicInvoice->getId());
+        } catch (\Exception $e) {
+            $e->getTraceAsString();
+            self::fail($e->getMessage());
+        }
+
+        $this->assertNotNull($basicInvoice);
+        $this->assertTrue($notificationStatus);
+    }
+
     public function testShouldCreateGetCancelRefundRequest()
     {
         $invoices = null;

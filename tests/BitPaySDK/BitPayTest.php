@@ -4,13 +4,14 @@ namespace BitPaySDK\Test;
 
 
 use BitPaySDK;
-use BitPaySDK\Model\Bill\BillStatus;
+use BitPaySDK\Model\Facade;
 use BitPaySDK\Model\Currency;
-use BitPaySDK\Model\Invoice\Invoice as Invoice;
+use PHPUnit\Framework\TestCase;
+use BitPaySDK\Model\Bill\BillStatus;
 use BitPaySDK\Model\Payout\PayoutStatus;
 use BitPaySDK\Model\Payout\RecipientStatus;
+use BitPaySDK\Model\Invoice\Invoice as Invoice;
 use BitPaySDK\Model\Payout\RecipientReferenceMethod;
-use PHPUnit\Framework\TestCase;
 
 class BitPayTest extends TestCase
 {
@@ -175,6 +176,22 @@ class BitPayTest extends TestCase
 
         $this->assertNotNull($invoices);
         $this->assertGreaterThan(0, count($invoices));
+    }
+
+    public function testShouldGetInvoiceByGuid()
+    {
+        $basicInvoice = null;
+        
+        try {
+            $basicInvoice = $this->client->createInvoice(new Invoice(2, Currency::BTC));
+            $retreivedInvoice = $this->client->getInvoiceByGuid($basicInvoice->getGuid(), Facade::Merchant, true);
+        } catch (\Exception $e) {
+            $e->getTraceAsString();
+            self::fail($e->getMessage());
+        }
+        
+        $this->assertNotNull($basicInvoice);
+        $this->assertEquals($basicInvoice->getGuid(), $retreivedInvoice->getguid());    
     }
 
     public function testShouldRequestInvoiceWebhook()

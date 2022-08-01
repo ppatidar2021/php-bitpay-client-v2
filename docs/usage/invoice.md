@@ -294,7 +294,39 @@ To get the generated invoice details, pass the Invoice Id with URL parameter
 $invoice = $bitpay->getInvoice($basicInvoice->getId());
 ```
 
-### Retrieve invoices filtered by query
+## Retrieve an invoice using guid
+
+`GET /invoices/guid/:guid`
+
+Facade **`MERCHANT`**
+
+### HTTP Request
+
+URL Parameters
+
+| Parameter | Description | Type | Presence |
+| --- | --- | :---: | :---: |
+| ?token= | When fetching an invoice via the `merchant` facade, pass the API token as a URL parameter - the same token used to create the invoice in the first place. | `string` | **Mandatory** |
+
+Headers
+
+| Fields | Description | Presence |
+| --- | --- | :---: |
+| X-Accept-Version | Must be set to `2.0.0` for requests to the BitPay API. | **Mandatory** |
+| Content-Type | must be set to `application/json` for requests to the BitPay API. | **Mandatory** |
+| X-Identity | the hexadecimal public key generated from the client private key. This header is required when using tokens with higher privileges (`merchant` facade). When using standard `merchant` facade token directly from the [BitPay dashboard](https://test.bitpay.com/dashboard/merchant/api-tokens) (with `"Require Authentication"` disabled), this header is not needed. | **Mandatory** |
+| X-Signature | header is the ECDSA signature of the full request URL concatenated with the request body, signed with your private key. This header is required when using tokens with higher privileges (`merchant` facade). When using standard `merchant` facade token directly from the [BitPay dashboard](https://test.bitpay.com/dashboard/merchant/api-tokens) (with `"Require Authentication"` disabled), this header is not needed. | **Mandatory** |
+
+
+To get the generated invoice details, pass the guid with URL parameter
+
+```php
+$basicInvoice = $this->client->createInvoice(new Invoice(2, Currency::BTC));
+$getInvoice = $this->client->getInvoiceByGuid(createInvoice.getGuid(), Facade.Merchant, true);
+```
+
+
+## Retrieve invoices filtered by query
 
 Facade `MERCHANT`
 
@@ -341,7 +373,8 @@ $sevenDaysAgo = $dateBefore->format("Y-m-d\TH:i:s.v\Z");
 $getInvoices = $bitpay->getInvoices($sevenDaysAgo, $today, null, null, 10);
 ```
 
-### Pay invoice
+
+## Pay invoice
 
 `PUT /invoices/pay/:invoiceId`
 

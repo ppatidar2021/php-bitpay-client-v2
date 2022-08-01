@@ -358,6 +358,46 @@ class Client
     }
 
     /**
+     * Retrieve a BitPay invoice by guid using the specified facade.  The client must have been previously authorized for the specified facade.
+     *
+     * @param guid        The guid of the invoice to retrieve.
+     * @param facade      The facade used to create it.
+     * @param signRequest Signed request.
+     * @return A BitPay Invoice object.
+     * @throws BitPayException       BitPayException class
+     * @throws InvoiceQueryException InvoiceQueryException class
+     */
+    public function getInvoiceByGuid(
+        string $guid, string $facade, bool $signRequest
+    ): Invoice {
+        try {
+            $params = [];
+            $params["token"] = $this->_tokenCache->getTokenByFacade($facade);
+
+            $responseJson = $this->_RESTcli->get("invoices/guid/".$guid, $params);
+        } catch (BitPayException $e) {
+            throw new InvoiceQueryException("failed to serialize Invoice object : ".$e->getMessage(), null, null, $e->getApiCode());
+        } catch (Exception $e) {
+            throw new InvoiceQueryException("failed to serialize Invoice object : ".$e->getMessage());
+        }
+
+        try {
+            $mapper = new JsonMapper();
+            $invoice = $mapper->map(
+                json_decode($responseJson),
+                new Invoice()
+            );
+
+        } catch (Exception $e) {
+            throw new InvoiceQueryException(
+                "failed to deserialize BitPay server response (Invoice) : ".$e->getMessage());
+        }
+
+        return $invoice;
+    }
+
+
+    /**
      * Request a BitPay Invoice Webhook.
      *
      * @param $invoiceId     string A BitPay invoice ID.
